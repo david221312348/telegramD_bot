@@ -1,13 +1,10 @@
 import telebot
 from telebot import types
 from funcs import send_mess, check_user
-from token import token
-alphabet1 =["А","Б","В","Г","Д","Е","Ё","Ж","З","И","Й","К","Л","М","Н","О",
-        "П","Р","С","Т","У","Ф","Х","Ц","Ч","Ш","Щ","Ъ","Ы","Ь","Э","Ю","Я"]
-alphabet2 = ["а","б","в","г","д","е","ё","ж","з","и","й","к","л","м","н","о",
-            "п","р","с","т","у","ф","х","ц","ч","ш","щ","ъ","ы","ь","э","ю","я"]
+from my_token import my_token
+from encode_and_decode import enc, dec
 users = {}
-bot = telebot.TeleBot(token())
+bot = telebot.TeleBot(my_token())
 users_list = []
 
 
@@ -79,18 +76,8 @@ def decode(message):
 def text(message):
     try:
         if users[message.from_user.username]['state'] == 'encode_key':
-            full_key = ''
             users[message.from_user.username]['encode_key'] = message.text
-            print(users)
-            while len(full_key) < len(users[message.from_user.username]['input']):
-                full_key += users[message.from_user.username]['encode_key']
-            while len(full_key) != len(users[message.from_user.username]['input']):
-                full_key = full_key[0:-1]
-            for i in range(len(users[message.from_user.username]['input'])):
-                if users[message.from_user.username]['input'][i] in alphabet1 or users[message.from_user.username]['input'][i] in alphabet2:
-                   users[message.from_user.username]['output'] += chr(((ord(users[message.from_user.username]['input'][i]) - 1072) + (ord(full_key[i]) - 1072)) % 32 + 1072)
-                else:
-                    users[message.from_user.username]['output'] += users[message.from_user.username]['input'][i]
+            users[message.from_user.username]['output'] = enc(users[message.from_user.username]['input'], users[message.from_user.username]['encode_key'])
             bot.send_message(message.chat.id,
                              'Зашифрованное сообщение: \n'+users[message.from_user.username]['output'],
                              parse_mode='html')
@@ -157,18 +144,8 @@ def text(message):
                                  parse_mode='html')
                 users[message.from_user.username]['state'] = 'default'
         elif users[message.from_user.username]['state'] == 'decode_key':
-            full_key = ''
             users[message.from_user.username]['decode_key'] = message.text
-            print(users)
-            while len(full_key) < len(users[message.from_user.username]['input']):
-                full_key += users[message.from_user.username]['decode_key']
-            while len(full_key) != len(users[message.from_user.username]['input']):
-                full_key = full_key[0:-1]
-            for i in range(len(users[message.from_user.username]['input'])):
-                if users[message.from_user.username]['input'][i] in alphabet1 or users[message.from_user.username]['input'][i] in alphabet2:
-                    users[message.from_user.username]['unlocked_output'] += chr(((ord(users[message.from_user.username]['input'][i]) - 1072) - (ord(full_key[i]) - 1072)) % 32 + 1072)
-                else:
-                    users[message.from_user.username]['unlocked_output'] += users[message.from_user.username]['input'][i]
+            users[message.from_user.username]['unlocked_output'] = dec(users[message.from_user.username]['input'], users[message.from_user.username]['decode_key'])
             bot.send_message(message.chat.id,
                              'Расшифрованное сообщение: \n'+users[message.from_user.username]['unlocked_output'],
                              parse_mode='html')
